@@ -5,6 +5,8 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\Genus;
 use AppBundle\Entity\GenusNote;
 use AppBundle\Repository\GenusNoteRepository;
+use AppBundle\Service\MarkdownTransformer;
+use Knp\Bundle\MarkdownBundle\Parser\MarkdownParser;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -55,7 +57,7 @@ class GenusController extends Controller
     /**
      * @Route("/genus/{genusName}", name="genus_show")
      */
-    public function showAction($genusName): Response
+    public function showAction($genusName, MarkdownTransformer $markdownTransformer): Response
     {
         $em =$this->getDoctrine()->getManager();
         $genus = $em->getRepository(Genus::class)
@@ -64,12 +66,31 @@ class GenusController extends Controller
         if (!$genus) {
             throw $this->createNotFoundException('No genus found');
         }
+        //$markdownParser = new MarkdownTransformer();
+        $funFact = $markdownTransformer->parse($genus->getFunFact());
+
+        // todo - add the caching back later
+        /*
+        $cache = $this->get('doctrine_cache.providers.my_markdown_cache');
+        $key = md5($funFact);
+        if ($cache->contains($key)) {
+            $funFact = $cache->fetch($key);
+        } else {
+            sleep(1); // fake how slow this could be
+            $funFact = $this->get('markdown.parser')
+                ->transform($funFact);
+            $cache->save($key, $funFact);
+        } */
+
+        $this->get('logger')
+            ->info('Showing genus: '.$genusName);
 
        $recentNotes = $em->getRepository(GenusNote::class)
            ->findAllRecentNotesForGenus($genus);
 
        return $this->render('genus/show.html.twig', [
            'genus' => $genus,
+           'funFact' => $funFact,
            'recentNoteCount' => count($recentNotes),
         ]);
     }
