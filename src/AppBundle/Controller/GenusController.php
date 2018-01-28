@@ -4,9 +4,7 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\Genus;
 use AppBundle\Entity\GenusNote;
-use AppBundle\Repository\GenusNoteRepository;
 use AppBundle\Service\MarkdownTransformer;
-use Knp\Bundle\MarkdownBundle\Parser\MarkdownParser;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -46,6 +44,7 @@ class GenusController extends Controller
     public function listAction(): Response
     {
         $em = $this->getDoctrine()->getManager();
+
         $genuses = $em->getRepository(Genus::class)
             ->findAllPublishedOrderedByRecentlyActive();
 
@@ -60,27 +59,15 @@ class GenusController extends Controller
     public function showAction($genusName, MarkdownTransformer $markdownTransformer): Response
     {
         $em =$this->getDoctrine()->getManager();
+
         $genus = $em->getRepository(Genus::class)
             ->findOneBy(['name' => $genusName]);
 
         if (!$genus) {
             throw $this->createNotFoundException('No genus found');
         }
-        //$markdownParser = new MarkdownTransformer();
-        $funFact = $markdownTransformer->parse($genus->getFunFact());
 
-        // todo - add the caching back later
-        /*
-        $cache = $this->get('doctrine_cache.providers.my_markdown_cache');
-        $key = md5($funFact);
-        if ($cache->contains($key)) {
-            $funFact = $cache->fetch($key);
-        } else {
-            sleep(1); // fake how slow this could be
-            $funFact = $this->get('markdown.parser')
-                ->transform($funFact);
-            $cache->save($key, $funFact);
-        } */
+        $funFact = $markdownTransformer->parse($genus->getFunFact());
 
         $this->get('logger')
             ->info('Showing genus: '.$genusName);
@@ -101,7 +88,6 @@ class GenusController extends Controller
      */
     public function getNotesAction(Genus $genus): Response
     {
-        dump($genus);
         $notes = [];
 
         foreach ($genus->getNotes() as $note) {
@@ -113,6 +99,7 @@ class GenusController extends Controller
                 'date' => $note->getCreatedAt()->format('M d, Y')
             ];
         }
+
         $data = [
             'notes' => $notes
         ];

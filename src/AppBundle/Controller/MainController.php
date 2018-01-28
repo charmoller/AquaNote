@@ -10,7 +10,7 @@ class MainController extends Controller
     /**
      * @Route("/", name="homepage_index")
      */
-    public function indexAction()
+    public function homepageAction()
     {
         return $this->render('main/homepage.html.twig');
     }
