@@ -31,7 +31,12 @@ services:
 
     app.markdown_transformer:
         class: AppBundle\Service\MarkdownTransformer
-        arguments: ['@markdown.parser', '@doctrine_cache.providers.my_markdown_cache']
+        arguments: ['@markdown.parser']
+
+    app.doctrine.hash_password_listener:
+        class: AppBundle\Doctrine\HashPasswordListener
+        tags:
+            - { name: doctrine.event_subscriber }
 
     # add more services, or override services that need manual wiring
     # AppBundle\Service\ExampleService:
